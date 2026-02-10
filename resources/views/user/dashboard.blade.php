@@ -115,7 +115,7 @@
             font-size: 1.5rem;
             font-weight: 800;
             text-decoration: none;
-            color: #FFAC1C;
+            color: #c36b2c;
         }
 
         .auth-body {
