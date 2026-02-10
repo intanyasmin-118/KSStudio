@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PhotoshootSession;
 use App\Models\Reservation;
 use Illuminate\Http\Request;
 
@@ -99,8 +100,9 @@ class ReservationController extends Controller
         // also block if already exists in reservation table
         // Inside confirm($session_id) in ReservationController.php
 
+        // Inside confirm($session_id) in ReservationController.php
         $exists = \App\Models\Reservation::where('session_id', $session_id)
-            ->whereIn('reservation_status', ['paid', 'completed']) // Check for confirmed bookings only
+            ->whereIn('reservation_status', ['paid', 'completed'])
             ->exists();
 
         if ($exists) {
@@ -120,6 +122,8 @@ class ReservationController extends Controller
         return view('reservation.confirm', compact('user', 'sessionData', 'package'));
     }
 
+    // app/Http/Controllers/ReservationController.php
+
     public function submit(Request $request)
     {
         if (! session()->has('user_id')) {
@@ -130,16 +134,49 @@ class ReservationController extends Controller
             'session_id' => 'required|exists:photoshoot_sessions,session_id',
         ]);
 
-        $reservation = \App\Models\Reservation::create([
-            'user_id' => session('user_id'),
-            'session_id' => $request->session_id,
-            'package_id' => session('selected_package_id'),
-            'reservation_status' => 'pending',
+        // INSTEAD of creating a record, save details to the session
+        session([
+            'pending_booking' => [
+                'user_id' => session('user_id'),
+                'session_id' => $request->session_id,
+                'package_id' => session('selected_package_id'),
+            ],
         ]);
 
-        // Clear selected package after reservation created (optional)
-        // session()->forget(['selected_package_id','selected_package_name','selected_package_price','selected_package_duration']);
+        // Redirect to your payment gateway logic
+        return redirect('/payment/process');
+    }
 
-        return redirect('/payment/'.$reservation->reservation_id);
+    public function paymentSuccess(Request $request)
+    {
+        // 1. Get the temporary data back from the session
+        $data = session('pending_booking');
+
+        if (! $data) {
+            return redirect('/sessions')->with('error', 'Session expired. Please try again.');
+        }
+
+        // 2. Perform a final check: Is the slot still available?
+        $session = PhotoshootSession::where('session_id', $data['session_id'])->first();
+
+        if ($session->status !== 'available') {
+            return redirect('/sessions')->with('error', 'Sorry, someone else booked this slot while you were paying.');
+        }
+
+        // 3. FINALLY create the record in the database
+        Reservation::create([
+            'user_id' => $data['user_id'],
+            'session_id' => $data['session_id'],
+            'package_id' => $data['package_id'],
+            'reservation_status' => 'paid', // Set directly to paid
+        ]);
+
+        // 4. Officially lock the session slot
+        $session->update(['status' => 'booked']);
+
+        // 5. Clean up the session so the "sticky note" is gone
+        session()->forget('pending_booking');
+
+        return redirect('/reservations')->with('success', 'Booking confirmed and paid!');
     }
 }

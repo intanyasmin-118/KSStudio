@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,34 +16,34 @@
             color: #333;
         }
 
-        .container{
+        .container {
             max-width: 1200px;
             margin: 35px auto;
             padding: 0 18px;
         }
 
         /* BACK BUTTON OUTSIDE BOX */
-        .topbar{
-            display:flex;
-            align-items:center;
-            gap:14px;
+        .topbar {
+            display: flex;
+            align-items: center;
+            gap: 14px;
             margin-bottom: 14px;
         }
 
-        .back-btn{
-            text-decoration:none;
-            font-weight:600;
-            color:#111;
-            font-size:16px;
+        .back-btn {
+            text-decoration: none;
+            font-weight: 600;
+            color: #111;
+            font-size: 16px;
         }
 
         /* BIG BOX */
-        .big-card{
-            border:1px solid #eee;
-            border-radius:18px;
-            padding:22px;
-            background:#fff;
-            box-shadow:0 10px 25px rgba(0,0,0,0.06);
+        .big-card {
+            border: 1px solid #eee;
+            border-radius: 18px;
+            padding: 22px;
+            background: #fff;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
         }
 
         /* Header inside big box */
@@ -57,14 +58,14 @@
             font-size: 26px;
             font-weight: 600;
             margin: 0;
-            color:#111;
+            color: #111;
         }
 
         /* Table Container */
         .table-container {
             background: white;
             border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
             border: 1px solid #eee;
             overflow: hidden;
         }
@@ -128,9 +129,9 @@
             color: #92400e;
         }
 
-        .status-paid{
-            background:#fff1c8;
-            color:#a65b00;
+        .status-paid {
+            background: #fff1c8;
+            color: #a65b00;
         }
 
         /* Time & Date Formatting */
@@ -153,10 +154,11 @@
             font-weight: 600;
         }
 
-        @media(max-width: 900px){
+        @media(max-width: 900px) {
+
             thead th:nth-child(4),
-            tbody td:nth-child(4){
-                display:none;
+            tbody td:nth-child(4) {
+                display: none;
             }
         }
     </style>
@@ -164,81 +166,81 @@
 
 <body>
 
-<div class="container">
+    <div class="container">
 
-    <!-- BACK BUTTON OUTSIDE BOX -->
-    <div class="topbar">
-        <a href="/user/dashboard" class="back-btn">← Back</a>
-    </div>
-
-    <!-- BIG BOX -->
-    <div class="big-card">
-
-        <div class="header-section">
-            <h2 style="font-size:34px ">My Reservations</h2>
+        <!-- BACK BUTTON OUTSIDE BOX -->
+        <div class="topbar">
+            <a href="/user/dashboard" class="back-btn">← Back</a>
         </div>
 
-        @if($reservations->count() == 0)
-            <div class="table-container" style="text-align: center;">
-                <p class="empty-state">No reservations found.</p>
+        <!-- BIG BOX -->
+        <div class="big-card">
+
+            <div class="header-section">
+                <h2 style="font-size:34px ">My Reservations</h2>
             </div>
-        @else
-            <div class="table-container" style="text-align: center;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="font-weight: 900;">Package</th>
-                            <th style="font-weight: 900;">Date & Time</th>
-                            <th style="font-weight: 900;">Status</th>
-                            <th style="text-align: center; font-weight: 900;">Reservation ID</th>
-                        </tr>
-                    </thead>
 
-                    <tbody>
-                        @foreach($reservations as $r)
-                        <tr>
-                            <td>
-                                <div class="package-name">
-                                    {{ $r->package->name ?? 'N/A' }}
-                                </div>
-                            </td>
+            @if ($reservations->count() == 0)
+                <div class="table-container" style="text-align: center;">
+                    <p class="empty-state">No reservations found.</p>
+                </div>
+            @else
+                <div class="table-container" style="text-align: center;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="font-weight: 900;">Package</th>
+                                <th style="font-weight: 900;">Date & Time</th>
+                                <th style="font-weight: 900;">Status</th>
+                                <th style="text-align: center; font-weight: 900;">Reservation ID</th>
+                            </tr>
+                        </thead>
 
-                            <td>
-                                <div class="date-text">
-                                    {{ $r->session->session_date ?? 'N/A' }}
-                                </div>
-                                <div class="time-text">
-                                    {{ $r->session->start_time ?? '-' }} - {{ $r->session->end_time ?? '-' }}
-                                </div>
-                            </td>
+                        <tbody>
+                            @foreach ($reservations as $r)
+                                <tr>
+                                    <td>
+                                        <div class="package-name">
+                                            {{ $r->package->name ?? 'N/A' }}
+                                        </div>
+                                    </td>
 
-                            <td>
-                                @php
-                                    $status = strtolower($r->reservation_status ?? 'pending');
-                                @endphp
+                                    <td>
+                                        <div class="date-text">
+                                            {{ $r->session->session_date ?? 'N/A' }}
+                                        </div>
+                                        <div class="time-text">
+                                            {{ $r->session->start_time ?? '-' }} - {{ $r->session->end_time ?? '-' }}
+                                        </div>
+                                    </td>
 
-                                @if($status === 'completed')
-                                    <span class="status status-completed">COMPLETED</span>
-                                @elseif($status === 'paid')
-                                    <span class="status status-paid">PAID</span>
-                                @else
-                                    <span class="status status-pending">{{ strtoupper($status) }}</span>
-                                @endif
-                            </td>
+                                    <td>
+                                        @php
+                                            $status = strtolower($r->reservation_status);
+                                        @endphp
 
-                            <td>
-                                <span class="res-id" style="text-align: center;">#{{ $r->reservation_id }}</span>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @endif
+                                        @if ($status === 'completed')
+                                            <span class="status status-completed">COMPLETED</span>
+                                        @else
+                                            <span class="status status-paid">PAID</span>
+                                        @endif
+                                    </td>
+
+                                    <td>
+                                        <span class="res-id"
+                                            style="text-align: center;">#{{ $r->reservation_id }}</span>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+
+        </div>
 
     </div>
 
-</div>
-
 </body>
+
 </html>
