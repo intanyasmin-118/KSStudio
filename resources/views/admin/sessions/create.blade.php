@@ -219,6 +219,44 @@
             }
         }
 
+        /* 1. Make the numbers much larger */
+        .flatpickr-day {
+            font-size: 20px !important;
+            /* Increase this to make numbers bigger */
+            font-weight: 600 !important;
+            height: 60px !important;
+            /* Increase height to keep it square */
+            line-height: 60px !important;
+            /* Center the number vertically */
+            max-width: none !important;
+            /* Allow it to grow with the container */
+        }
+
+        /* 2. Style the Day names (Mon, Tue, etc.) to match */
+        .flatpickr-weekday {
+            font-size: 16px !important;
+            font-weight: 700 !important;
+            color: #333 !important;
+        }
+
+        /* 3. Increase the Month and Year size at the top */
+        .flatpickr-current-month {
+            font-size: 150% !important;
+            padding: 10px 0 !important;
+        }
+
+        /* 4. Fix the container height so it doesn't look cramped */
+        .flatpickr-days {
+            width: 100% !important;
+            min-height: 350px;
+            /* Adjust this if the calendar looks too short */
+        }
+
+        /* 5. Highlight the selected date better */
+        .flatpickr-day.selected {
+            background: #c36b2c !important;
+            border-color: #c36b2c !important;
+        }
     </style>
 </head>
 

@@ -291,7 +291,7 @@
     font-size: 1.5rem;
     font-weight: 800;
     text-decoration: none;
-    color: #FFAC1C;
+    color: #c36b2c;
 }
 
 .login-box {
@@ -342,8 +342,8 @@
 .login-btn {
     width: 100%;           
     padding: 16px;
-    background-color: #FFAC1C;
-    color: black;
+    background-color: #c36b2c;
+    color: white;
     border: none;
     border-radius: 8px;    
     font-weight: 700;

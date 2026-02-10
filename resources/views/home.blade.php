@@ -466,33 +466,38 @@ form {
 
 <h2 id="packages" class="section-title">Our Packages</h2>
 <div class="package-grid">
-    <div class="package-card">
-        <h3>Basic Session</h3>
-        <div class="package-price">RM 50</div>
+    <div class="package-card" style="border: 2px solid #000;">
+        <h3>KSS-Single Snape!</h3>
+        <div class="package-price">RM 30</div>
         <ul>
-            <li>30 Minutes Session</li>
-            <li>5 Edited Digital Photos</li>
+            <li>15 Minutes Session</li>
             <li>Single Person</li>
         </ul>
     </div>
 
     <div class="package-card" style="border: 2px solid #000;">
-        <h3>Premium Session</h3>
-        <div class="package-price">RM 120</div>
+        <h3>KSS-Double Play!</h3>
+        <div class="package-price">RM 45</div>
         <ul>
-            <li>1 Hour Session</li>
-            <li>15 Edited Digital Photos</li>
-            <li>Up to 4 Persons</li>
+            <li>15 Minutes Session</li>
+            <li>Up to 3 Persons</li>
         </ul>
     </div>
 
-    <div class="package-card">
-        <h3>Studio Pro</h3>
-        <div class="package-price">RM 250</div>
+    <div class="package-card" style="border: 2px solid #000;">
+        <h3>KSS-Family Fiesta!</h3>
+        <div class="package-price">RM 60</div>
         <ul>
-            <li>2 Hours Session</li>
-            <li>All Raw + 30 Edited Photos</li>
-            <li>Unlimited Persons</li>
+            <li>25 Minutes Session</li>
+            <li>Up to 5 Persons</li>
+        </ul>
+    </div>
+    <div class="package-card" style="border: 2px solid #000;">
+        <h3>KSS-Friend Time!</h3>
+        <div class="package-price">RM 80</div>
+        <ul>
+            <li>25 Minutes Session</li>
+            <li>Up to 7 Persons</li>
         </ul>
     </div>
 </div>
