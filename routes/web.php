@@ -89,7 +89,7 @@ Route::get('/', function () {
     return view('home', compact('showcasePhotos'));
 });
 
-Route::get('/payment/{reservation_id}', [PaymentController::class, 'create']);
+Route::get('/payment/process', [PaymentController::class, 'create']);
 Route::post('/payment', [PaymentController::class, 'store']);
 
 Route::get('/admin/reservations', [ReportController::class, 'reservations']);

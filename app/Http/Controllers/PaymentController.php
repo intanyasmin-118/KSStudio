@@ -2,96 +2,114 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Payment;
-use App\Models\Reservation;
-use App\Models\Package;
-use Illuminate\Http\Request;
 use App\Models\Account;
+use App\Models\Package;
+use App\Models\Payment;
 use App\Models\PhotoshootSession;
+use App\Models\Reservation;
+use Illuminate\Http\Request;
 
 class PaymentController extends Controller
 {
     // Show payment page
-    public function create($reservation_id)
+    public function create() // Remove $reservation_id from here
     {
-        if (!session()->has('user_id')) {
+        // 1. Check if user is logged in
+        if (! session()->has('user_id')) {
             return redirect('/login');
         }
 
-        $reservation = \App\Models\Reservation::findOrFail($reservation_id);
+        // 2. Fetch the temporary booking data from the SESSION
+        $pendingData = session('pending_booking');
 
-        // Security: only owner (customer) or admin can access
-        if (session('role') === 'customer' && $reservation->user_id != session('user_id')) {
-            return redirect('/user/dashboard');
+        if (! $pendingData) {
+            return redirect('/sessions')->with('error', 'Booking session expired. Please re-select your slot.');
         }
 
-        $customer = \App\Models\Account::where('user_id', $reservation->user_id)->first();
-        $sessionData = \App\Models\PhotoshootSession::where('session_id', $reservation->session_id)->first();
-        $package = \App\Models\Package::find($reservation->package_id);
+        // 3. Fetch details based on the IDs stored in the session
+        $customer = \App\Models\Account::where('user_id', $pendingData['user_id'])->first();
+        $sessionData = \App\Models\PhotoshootSession::where('session_id', $pendingData['session_id'])->first();
+        $package = \App\Models\Package::find($pendingData['package_id']);
 
-        // If no package (old reservations), fallback
+        // 4. Fallback logic for price/package
         $packagePrice = $package ? $package->price : 100;
         $packageDuration = $package ? $package->duration_minutes : 0;
-        $packageName = $package ? $package->name : "N/A";
+        $packageName = $package ? $package->name : 'N/A';
 
+        // 5. Return the view.
+        // NOTE: We pass 'pendingData' instead of 'reservation' because the DB row isn't made yet.
         return view('payment.create', [
-            'reservation' => $reservation,
+            'pendingData' => $pendingData,
             'customer' => $customer,
             'sessionData' => $sessionData,
             'packageName' => $packageName,
             'packageDuration' => $packageDuration,
-            'packagePrice' => $packagePrice
+            'packagePrice' => $packagePrice,
         ]);
     }
-
 
     // Store payment
     public function store(Request $request)
     {
+        // 1. VALIDATION
+        // Remove 'reservation_id' from validation since we use the session now
         $request->validate([
-            'reservation_id' => 'required|exists:reservations,reservation_id',
             'payment_method' => 'required|in:duitnow_qr,bank_transfer',
-            'amount' => 'required|numeric|min:0'
+            'amount' => 'required|numeric|min:0',
         ]);
 
-        // if bank transfer -> must choose bank
         if ($request->payment_method === 'bank_transfer') {
             $request->validate([
-                'bank_name' => 'required'
+                'bank_name' => 'required',
             ]);
         }
 
-        $reservation = Reservation::where('reservation_id', $request->reservation_id)->firstOrFail();
+        // 2. RETRIEVE SESSION DATA
+        $data = session('pending_booking');
 
-        // Security: only owner (customer) or admin can pay
-        if (session('role') === 'customer' && $reservation->user_id != session('user_id')) {
-            return redirect('/user/dashboard');
+        if (! $data) {
+            return redirect('/sessions')->with('error', 'Booking session expired. Please try again.');
         }
 
-        // AUTO RETRIEVE PACKAGE PRICE
-        $package = Package::find($reservation->package_id);
-        $amount = $package ? $package->price : 100;
+        // 3. FINAL AVAILABILITY CHECK (Crucial!)
+        // Make sure no one else booked this while the user was on the payment page
+        $session = \App\Models\PhotoshootSession::where('session_id', $data['session_id'])
+            ->where('status', 'available')
+            ->first();
 
-        Payment::create([
+        if (! $session) {
+            return redirect('/sessions')->with('error', 'Sorry, this slot was just taken by someone else.');
+        }
+
+        // 4. CREATE RESERVATION (Only now does it hit the database)
+        $reservation = \App\Models\Reservation::create([
+            'user_id' => session('user_id'),
+            'session_id' => $data['session_id'],
+            'package_id' => $data['package_id'],
+            'reservation_status' => 'paid', // Set directly to paid
+        ]);
+
+        // 5. CREATE PAYMENT RECORD (Using your original logic)
+        \App\Models\Payment::create([
             'reservation_id' => $reservation->reservation_id,
-            'amount' => $amount,
+            'amount' => $request->amount,
             'payment_method' => $request->payment_method,
-            'bank_name' => $request->payment_method === 'bank_transfer' ? $request->bank_name : null,
-            'payment_status' => 'paid'
+            'payment_status' => 'paid',
         ]);
 
-        // Update reservation status
-        $reservation->update([
-            'reservation_status' => 'paid'
-        ]);
+        // 6. UPDATE SESSION STATUS
+        $session->update(['status' => 'booked']);
 
-        return redirect('/payment/success/' . $reservation->reservation_id);
+        // 7. CLEANUP
+        session()->forget('pending_booking');
+
+        // 8. REDIRECT
+        return redirect('/payment/success/'.$reservation->reservation_id);
     }
-
 
     public function success($reservation_id)
     {
-        if (!session()->has('user_id')) {
+        if (! session()->has('user_id')) {
             return redirect('/login');
         }
 
@@ -119,7 +137,7 @@ class PaymentController extends Controller
 
     public function receipt($reservation_id)
     {
-        if (!session()->has('user_id')) {
+        if (! session()->has('user_id')) {
             return redirect('/login');
         }
 
@@ -150,7 +168,7 @@ class PaymentController extends Controller
 
     public function adminIndex()
     {
-        if (!session()->has('user_id')) {
+        if (! session()->has('user_id')) {
             return redirect('/login');
         }
 
@@ -170,7 +188,7 @@ class PaymentController extends Controller
             $rows[] = [
                 'payment' => $p,
                 'reservation' => $reservation,
-                'customer' => $customer
+                'customer' => $customer,
             ];
         }
 
@@ -179,7 +197,7 @@ class PaymentController extends Controller
 
     public function adminReceipt($payment_id)
     {
-        if (!session()->has('user_id')) {
+        if (! session()->has('user_id')) {
             return redirect('/login');
         }
 
@@ -196,7 +214,7 @@ class PaymentController extends Controller
 
     public function adminInvoice($payment_id)
     {
-        if (!session()->has('user_id')) {
+        if (! session()->has('user_id')) {
             return redirect('/login');
         }
 
@@ -210,8 +228,4 @@ class PaymentController extends Controller
 
         return view('admin.payments.invoice', compact('payment', 'reservation', 'customer'));
     }
-
-
-
-
 }

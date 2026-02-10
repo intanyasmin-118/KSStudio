@@ -271,10 +271,10 @@
             {{-- TOP INFO --}}
             <div class="top-info">
                 <div class="item">
-                    <b>Reservation ID:</b> {{ $reservation->reservation_id }}
+                    <b>Reservation ID:</b> <span style="color: #888;">#NEW</span>
                 </div>
                 <div class="item">
-                    <b>Status:</b> {{ $reservation->reservation_status }}
+                    <b>Status:</b> <span style="color: #b55200;">WAITING FOR PAYMENT</span>
                 </div>
             </div>
 
@@ -328,7 +328,9 @@
             <form method="POST" action="/payment">
                 @csrf
 
-                <input type="hidden" name="reservation_id" value="{{ $reservation->reservation_id }}">
+                {{-- We pass the SESSION ID and PACKAGE ID instead of a Reservation ID --}}
+                <input type="hidden" name="session_id" value="{{ $pendingData['session_id'] }}">
+                <input type="hidden" name="package_id" value="{{ $pendingData['package_id'] }}">
 
                 <div class="section-title">Select Payment</div>
 
@@ -344,11 +346,17 @@
                 </div>
 
                 {{-- Hidden select (backend still works) --}}
-                <label>Payment Method</label>
-                <select name="payment_method" id="payment_method">
-                    <option value="duitnow_qr">DuitNow QR</option>
-                    <option value="bank_transfer">Bank Transfer</option>
-                </select>
+                {{-- This shows the user what they picked, but they can't click it to change it --}}
+                <div style="margin-top: 10px;">
+                    <label>Selected Method</label>
+                    <div id="method-display"
+                        style="padding: 12px; border-radius: 10px; border: 1px solid #ddd; background: #eee; font-weight: 700; color: #555;">
+                        DuitNow QR
+                    </div>
+                </div>
+
+                {{-- This hidden input actually sends the data to your controller --}}
+                <input type="hidden" name="payment_method" id="payment_method" value="duitnow_qr">
 
                 {{-- METHOD DETAILS (dynamic) --}}
                 <div class="method-details" id="method-details">
@@ -407,27 +415,32 @@
 
     <script>
         function setMethod(method) {
+        // 1. Update the hidden input for the backend
+        document.getElementById("payment_method").value = method;
 
-            document.getElementById("payment_method").value = method;
-
-            // remove active
-            document.getElementById("box-qr").classList.remove("active");
-            document.getElementById("box-transfer").classList.remove("active");
-
-            // show/hide details
-            const qr = document.getElementById("qr-details");
-            const bank = document.getElementById("bank-details");
-
-            if (method === "duitnow_qr") {
-                document.getElementById("box-qr").classList.add("active");
-                qr.style.display = "block";
-                bank.style.display = "none";
-            } else {
-                document.getElementById("box-transfer").classList.add("active");
-                qr.style.display = "none";
-                bank.style.display = "block";
-            }
+        // 2. Update the "Read Only" display text for the user
+        const display = document.getElementById("method-display");
+        if (display) {
+            display.innerText = (method === 'duitnow_qr') ? "DuitNow QR" : "Bank Transfer";
         }
+
+        // 3. Toggle visual active states
+        document.getElementById("box-qr").classList.remove("active");
+        document.getElementById("box-transfer").classList.remove("active");
+
+        const qr = document.getElementById("qr-details");
+        const bank = document.getElementById("bank-details");
+
+        if (method === "duitnow_qr") {
+            document.getElementById("box-qr").classList.add("active");
+            qr.style.display = "block";
+            bank.style.display = "none";
+        } else {
+            document.getElementById("box-transfer").classList.add("active");
+            qr.style.display = "none";
+            bank.style.display = "block";
+        }
+    }
     </script>
 
 </body>
